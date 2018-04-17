@@ -16,7 +16,10 @@
 </head>
 <body>
 
-  <button id="start">Generate</button><br>
+  <input type="text" id="seed" value="initial seed">
+  <button id="setSeed">Set</button>
+  <button id="start">Next</button>
+  <br>
 
   <canvas id="art" width="128" height="128" style="border:0px">
     Your browser does not support the HTML5 canvas tag.
@@ -29,6 +32,7 @@
 
   <script>
     setTimeout(function () {
+      const seed = document.getElementById("seed");
       const formula = document.getElementById("formula");
       const timer = document.getElementById("timer");
       const canvas = document.getElementById("art");
@@ -43,6 +47,12 @@
       const imagedata = ctx.createImageData(size, size);
       const d = imagedata.data;
 
+      function setSeed() {
+        const initial = b_crc32(seed.value);
+        prng = Alea(initial);
+        start();
+      }
+
       function start() {
         const tbeg = performance.now();
         const art = generate(8);
@@ -50,9 +60,11 @@
         for (let x=0; x<size; x++) {
           for (let y=0; y<size; y++) {
             let u,v;
-            [u,v] = [x,y].map(i => i/size2 - 1.0)
+            [u,v] = [x,y].map(i => i/size2 - 1.0);
 
-            let color = art.eval(u,v);
+            //[u,v] = [Math.sqrt(u*u + v*v), Math.atan2(v,u)/Math.PI];
+
+            let color = art.eval(u, v);
             color = color.map(i => (i+1.0) * 128);
 
             const idx = (y * size + x) * 4;
@@ -69,8 +81,9 @@
       }
 
       document.getElementById("start").onclick = start;
+      document.getElementById("setSeed").onclick = setSeed;
 
-      start();
+      setSeed();
     }, 0);
 
   </script>
