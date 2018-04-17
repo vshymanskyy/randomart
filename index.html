@@ -28,45 +28,50 @@
   <script src="randomart.js"></script>
 
   <script>
+    setTimeout(function () {
+      const formula = document.getElementById("formula");
+      const timer = document.getElementById("timer");
+      const canvas = document.getElementById("art");
+      const ctx = canvas.getContext("2d");
 
-    const formula = document.getElementById("formula");
-    const timer = document.getElementById("timer");
-    const canvas = document.getElementById("art");
-    const ctx = canvas.getContext("2d");
+      const size = 256;
+      const size2 = size/2;
 
-    const size = 512;
-    const size2 = size/2;
+      canvas.width = size;
+      canvas.height = size;
 
-    canvas.width = size;
-    canvas.height = size;
+      const imagedata = ctx.createImageData(size, size);
+      const d = imagedata.data;
 
-    const imagedata = ctx.createImageData(size, size);
-    const d = imagedata.data;
+      function start() {
+        const tbeg = performance.now();
+        const art = generate(8);
+        formula.innerHTML = art.toString();
+        for (let x=0; x<size; x++) {
+          for (let y=0; y<size; y++) {
+            let u,v;
+            [u,v] = [x,y].map(i => i/size2 - 1.0)
 
-    document.getElementById("start").onclick = function() {
-      const tbeg = performance.now();
-      const art = generate(8);
-      formula.innerHTML = art.toString();
-      for (let x=0; x<size; x++) {
-        for (let y=0; y<size; y++) {
-          let u,v;
-          [u,v] = [x,y].map(i => i/size2 - 1.0)
+            let color = art.eval(u,v);
+            color = color.map(i => (i+1.0) * 128);
 
-          let color = art.eval(u,v);
-          color = color.map(i => (i+1.0) * 128);
-
-          const idx = (y * size + x) * 4;
-          d[idx]   = color[0]
-          d[idx+1] = color[1]
-          d[idx+2] = color[2]
-          d[idx+3] = 0xFF
+            const idx = (y * size + x) * 4;
+            d[idx]   = color[0]
+            d[idx+1] = color[1]
+            d[idx+2] = color[2]
+            d[idx+3] = 0xFF
+          }
         }
-      }
-      ctx.putImageData(imagedata, 0, 0);
+        ctx.putImageData(imagedata, 0, 0);
 
-      const tend = performance.now();
-      timer.innerHTML = `Generated in ${((tend - tbeg)/1000).toFixed(3)} seconds`
-    }
+        const tend = performance.now();
+        timer.innerHTML = `Generated in ${((tend - tbeg)/1000).toFixed(3)} seconds`
+      }
+
+      document.getElementById("start").onclick = start;
+
+      start();
+    }, 0);
 
   </script>
 
