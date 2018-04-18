@@ -91,17 +91,29 @@
       const d = imagedata.data;
 
       let seedValue = '';
+      let curOffset = 0;
 
       function start() {
         const tbeg = performance.now();
 
         if (seed.value !== seedValue) {
           seedValue = seed.value;
-          const initial = b_crc32(seedValue);
-          prng = Alea(initial);
+
+          const seedArr = seedValue.split('+');
+          prng = Alea(b_crc32(seedArr[0]));
+          curOffset = parseInt(seedArr[1])-1;
+          if (curOffset > 0) {
+            for (let i=0; i<curOffset; i++) {
+              generate(8);
+            }
+          } else {
+            curOffset = 0;
+          }
         }
 
-        const art = generate(8);
+        let art = generate(8);
+        curOffset++;
+
         formula.innerHTML = art.toString();
         for (let x=0; x<size; x++) {
           for (let y=0; y<size; y++) {
@@ -123,7 +135,7 @@
         ctx.putImageData(imagedata, 0, 0);
 
         const tend = performance.now();
-        timer.innerHTML = `Generated in <b>${((tend - tbeg)/1000).toFixed(3)}</b> seconds`
+        timer.innerHTML = `Generated image <b>#${curOffset}</b> in <b>${((tend - tbeg)/1000).toFixed(3)}</b> seconds`
       }
 
       document.getElementById("start").onclick = start;
