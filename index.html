@@ -54,8 +54,8 @@
 </head>
 <body>
 
+  .:[change this text to get a different set of images]:.<br>
   <input type="text" id="seed" value="initial seed">
-  <button id="setSeed">Set</button> .:[change this text to get a different set of images]:.<br>
   <button id="start">Generate next image</button>
   <br><br>
 
@@ -90,14 +90,16 @@
       const imagedata = ctx.createImageData(size, size);
       const d = imagedata.data;
 
-      function setSeed() {
-        const initial = b_crc32(seed.value);
-        prng = Alea(initial);
-        start();
-      }
+      let seedValue = '';
 
       function start() {
         const tbeg = performance.now();
+
+        if (seed.value !== seedValue) {
+          seedValue = seed.value;
+          const initial = b_crc32(seedValue);
+          prng = Alea(initial);
+        }
 
         const art = generate(8);
         formula.innerHTML = art.toString();
@@ -125,9 +127,8 @@
       }
 
       document.getElementById("start").onclick = start;
-      document.getElementById("setSeed").onclick = setSeed;
 
-      setSeed();
+      start();
     }, 0);
 
   </script>
