@@ -188,7 +188,7 @@ class Mod {
 
 class Well {
     static get arity() { return 1 }
-    static get mindepth() { return 3 }
+    static get mindepth() { return 2 }
 
     constructor(e) {
         this.e = e;
@@ -204,7 +204,7 @@ class Well {
 
 class Tent {
     static get arity() { return 1 }
-    static get mindepth() { return 1 }
+    static get mindepth() { return 2 }
 
     constructor(e) {
         this.e = e;
@@ -283,7 +283,7 @@ class Mix {
         w = (0.5 * (this.w.eval(x, y)[0] + 1.0));
         c1 = this.e1.eval(x, y);
         c2 = this.e2.eval(x, y);
-        return average(c1, c2);
+        return average(c1, c2, w);
     }
 }
 
@@ -298,10 +298,12 @@ function generate(k = 50, depth = 0) {
         return new op();
     } else {
         let op = random.choice(operators1.filter(i => (depth >= i.mindepth)));
-        depth += random.randrange(1, op.arity+1);
+
+        //while (depth < k && random.uniform() <= 0.2) depth++;
+        //depth += random.randrange(1, op.arity);
         let args = [];
         for (let i = 0; i<op.arity; i++) {
-          args.push(generate(k, depth))
+          args.push(generate(k, depth+i+1))
         }
         return new op(...args);
     }
