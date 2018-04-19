@@ -32,6 +32,10 @@
       font-weight: bold;
     }
 
+    canvas {
+      border:0px;
+    }
+
     .flex-container {
       padding: 0;
       margin: 0;
@@ -58,9 +62,14 @@
       color: yellow;
     }
 
+    #art {
+      width: 100%;
+      max-width: 512px;
+    }
+
     pre {
       font-family: 'Lucida Console', Monaco, monospace;
-      font-size: 12px;
+      font-size: 10px;
 
       white-space: pre-wrap;       /* Since CSS 2.1 */
       white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
@@ -72,19 +81,19 @@
 </head>
 <body>
 
-  <div id="main" class="flex-container">
-    <div>
-      <div>
-        .:[change this text to get a different set of images]:.<br>
-        <input type="text" id="seed" value="initial seed">
-        <button id="start">Generate next image</button>
-        <br><br>
-      </div>
-      <canvas id="art" width="128" height="128" style="border:0px">
+  <div>
+    .:[change this text to get a different set of images]:.<br>
+    <input type="text" id="seed" value="initial seed">
+    <button id="start">Generate next image</button>
+    <br><br>
+  </div>
+
+  <div style="width:100%; text-align: center;">
+      <canvas id="art" width="512" height="512">
         Your browser does not support the HTML5 canvas tag.
       </canvas>
+      <br>
       <div id="timer"> </div>
-    </div>
   </div>
 
   <br><div id="gallery" class="flex-container"></div><br>
