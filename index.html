@@ -36,7 +36,7 @@
       border:0px;
     }
 
-    .flex-container {
+    .gallery-container {
       padding: 0;
       margin: 0;
 
@@ -50,8 +50,14 @@
       justify-content: center;
     }
 
-    .flex-item {
+    .gallery-item {
       margin: 5px;
+      cursor: pointer;
+    }
+
+    .gallery-btn {
+      line-height: 64px;
+      font-size: 32px;
     }
 
     a:link, a:visited {
@@ -82,9 +88,9 @@
 <body>
 
   <div>
-    .:[change this text to get a different set of images]:.<br>
+    .:[change this text to get different images]:.<br>
     <input type="text" id="seed" value="initial seed">
-    <button id="start">Generate next image</button>
+    <button id="start">Generate</button>
     <br><br>
   </div>
 
@@ -96,7 +102,7 @@
       <div id="timer"> </div>
   </div>
 
-  <br><div id="gallery" class="flex-container"></div><br>
+  <br><div id="gallery" class="gallery-container"></div><br>
 
   <b>Formula:</b>
   <pre id="formula"> </pre>
@@ -130,18 +136,30 @@
       const gallery = document.getElementById("gallery");
       const gallery_canv = [];
 
-      for (let i=0; i<GALL; i++) {
-        let canv = document.createElement('canvas');
-        canv.width = canv.height = 64;
-        canv.className = "flex-item";
-        gallery.appendChild(canv);
-        gallery_canv.push(canv);
-      }
-
       let seedValue = '';
       let curSeed = 0;
       let curOffset = 0;
       let isRendering = false;
+
+      let prevBtn = document.createElement('div');
+      prevBtn.className = "gallery-btn gallery-item";
+      prevBtn.innerHTML = "<";
+      prevBtn.onclick = function() { curOffset-=GALL; render_gallery(curOffset); }
+
+      let nextBtn = document.createElement('div');
+      nextBtn.className = "gallery-btn gallery-item";
+      nextBtn.innerHTML = ">";
+      nextBtn.onclick = function() { curOffset+=GALL; render_gallery(curOffset); }
+
+      gallery.appendChild(prevBtn);
+      for (let i=0; i<GALL; i++) {
+        let canv = document.createElement('canvas');
+        canv.width = canv.height = 64;
+        canv.className = "gallery-item";
+        gallery.appendChild(canv);
+        gallery_canv.push(canv);
+      }
+      gallery.appendChild(nextBtn);
 
       async function render(canvas, offset = 0) {
         const size = canvas.width;
@@ -186,52 +204,55 @@
         }
       }
 
-      async function render_main() {
-        if (isRendering) return;
-        isRendering = true;
+      async function render_main(offset) {
+        let res = await render(canvas, offset);
+        formula.innerHTML = res.formula;
+        timer.innerHTML = `Generated image <b>#${offset+1}</b> in <b>${res.time.toFixed(3)}</b> seconds`;
+      }
 
-        if (seed.value !== seedValue) {
-          seedValue = seed.value;
+      async function render_gallery(offset) {
+        for (let i=0; i<gallery_canv.length; i++) {
+          let canv = gallery_canv[i];
+          let previewOffset = offset+i;
+          canv.title = `image #${previewOffset+1} [${curSeed+previewOffset}]`;
+          canv.onclick = function() { render_main(previewOffset) };
 
-          const seedArr = seedValue.split('+');
-          curSeed = seedArr[0];
-          curOffset = parseInt(seedArr[1])-1;
-          if (!(curOffset > 0)) {
-            curOffset = 0;
-          }
-          if (filterInt(curSeed)) {
-            curSeed = filterInt(curSeed);
-          } else if (curSeed === 'random') {
-            curSeed = +new Date() + Math.floor(Math.random()*1000);
-          } else {
-            curSeed = b_crc32(curSeed);
-          }
-          console.log(`New Seed: ${curSeed}, Offset: ${curOffset}`)
+          render(canv, previewOffset);
         }
+      }
+
+      async function init() {
+        if (seed.value === seedValue) {
+          return;
+        }
+
+        seedValue = seed.value;
+
+        const seedArr = seedValue.split('+');
+        curSeed = seedArr[0];
+        curOffset = parseInt(seedArr[1])-1;
+        if (!(curOffset > 0)) {
+          curOffset = 0;
+        }
+        if (filterInt(curSeed)) {
+          curSeed = filterInt(curSeed);
+        } else if (curSeed === 'random') {
+          curSeed = +new Date() + Math.floor(Math.random()*1000);
+        } else {
+          curSeed = b_crc32(curSeed);
+        }
+        console.log(`New Seed: ${curSeed}, Offset: ${curOffset}`)
 
         canvas.width = SIZE;
         canvas.height = SIZE;
 
-        let res = await render(canvas, curOffset);
-        curOffset++;
-
-        formula.innerHTML = res.formula;
-        timer.innerHTML = `Generated image <b>#${curOffset}</b> in <b>${res.time.toFixed(3)}</b> seconds`;
-
-
-        for (let i=0; i<gallery_canv.length; i++) {
-          let canv = gallery_canv[i];
-          let previewOffset = curOffset+i;
-          render(canv, previewOffset);
-          canv.title = `image #${previewOffset+1} [${curSeed+previewOffset}]`;
-          canv.onclick = function() { curOffset = previewOffset; render_main() };
-        }
-        isRendering = false;
+        await render_main(curOffset);
+        render_gallery(curOffset);
       }
 
-      document.getElementById("start").onclick = render_main;
+      document.getElementById("start").onclick = init;
 
-      await render_main();
+      await init();
     });
 
   </script>
