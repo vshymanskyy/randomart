@@ -124,8 +124,10 @@
       return NaN;
     }
 
-    SIZE = 512;
-    GALL = 16;
+    const DEVMODE = 0;
+
+    const SIZE = 512;
+    const GALL = DEVMODE ? 128 : 16;
 
     document.addEventListener('DOMContentLoaded', async function() {
       const seed = document.getElementById("seed");
@@ -217,7 +219,7 @@
           canv.title = `image #${previewOffset+1} [${curSeed+previewOffset}]`;
           canv.onclick = function() { render_main(previewOffset) };
 
-          render(canv, previewOffset);
+          await render(canv, previewOffset);
         }
       }
 
@@ -246,8 +248,8 @@
         canvas.width = SIZE;
         canvas.height = SIZE;
 
-        await render_main(curOffset);
-        render_gallery(curOffset);
+        await render_gallery(curOffset);
+        if (!DEVMODE) await render_main(curOffset);
       }
 
       document.getElementById("start").onclick = init;
