@@ -32,6 +32,24 @@
       font-weight: bold;
     }
 
+    .flex-container {
+      padding: 0;
+      margin: 0;
+
+      display: -webkit-box;
+      display: -moz-box;
+      display: -ms-flexbox;
+      display: -webkit-flex;
+      display: flex;
+
+      -webkit-flex-flow: row wrap;
+      justify-content: center;
+    }
+
+    .flex-item {
+      margin: 5px;
+    }
+
     a:link, a:visited {
       color: white;
     }
@@ -54,16 +72,23 @@
 </head>
 <body>
 
-  .:[change this text to get a different set of images]:.<br>
-  <input type="text" id="seed" value="initial seed">
-  <button id="start">Generate next image</button>
-  <br><br>
+  <div id="main" class="flex-container">
+    <div>
+      <div>
+        .:[change this text to get a different set of images]:.<br>
+        <input type="text" id="seed" value="initial seed">
+        <button id="start">Generate next image</button>
+        <br><br>
+      </div>
+      <canvas id="art" width="128" height="128" style="border:0px">
+        Your browser does not support the HTML5 canvas tag.
+      </canvas>
+      <div id="timer"> </div>
+    </div>
+  </div>
 
-  <canvas id="art" width="128" height="128" style="border:0px">
-    Your browser does not support the HTML5 canvas tag.
-  </canvas>
+  <br><div id="gallery" class="flex-container"></div><br>
 
-  <p id="timer"> </p>
   <b>Formula:</b>
   <pre id="formula"> </pre>
 
@@ -78,47 +103,50 @@
       return new Promise(resolve => setTimeout(resolve, ms))
     }
 
-    setTimeout(function () {
+    function filterInt(value) {
+      if (/^(\-|\+)?([0-9]+|Infinity)$/.test(value))
+        return Number(value);
+      return NaN;
+    }
+
+    SIZE = 512;
+    GALL = 16;
+
+    document.addEventListener('DOMContentLoaded', async function() {
       const seed = document.getElementById("seed");
       const formula = document.getElementById("formula");
       const timer = document.getElementById("timer");
       const canvas = document.getElementById("art");
-      const ctx = canvas.getContext("2d");
 
-      const size = 512;
-      const size2 = size/2;
+      const gallery = document.getElementById("gallery");
+      const gallery_canv = [];
 
-      canvas.width = size;
-      canvas.height = size;
-
-      const imagedata = ctx.createImageData(size, size);
-      const d = imagedata.data;
+      for (let i=0; i<GALL; i++) {
+        let canv = document.createElement('canvas');
+        canv.width = canv.height = 64;
+        canv.className = "flex-item";
+        gallery.appendChild(canv);
+        gallery_canv.push(canv);
+      }
 
       let seedValue = '';
+      let curSeed = 0;
       let curOffset = 0;
+      let isRendering = false;
 
-      async function start() {
+      async function render(canvas, offset = 0) {
+        const size = canvas.width;
+        const size2 = size/2;
+
+        const ctx = canvas.getContext("2d");
+        const imagedata = ctx.createImageData(size, size);
+        const d = imagedata.data;
+
         const tbeg = performance.now();
 
-        if (seed.value !== seedValue) {
-          seedValue = seed.value;
-
-          const seedArr = seedValue.split('+');
-          prng = Alea(b_crc32(seedArr[0]));
-          curOffset = parseInt(seedArr[1])-1;
-          if (curOffset > 0) {
-            for (let i=0; i<curOffset; i++) {
-              generate(8);
-            }
-          } else {
-            curOffset = 0;
-          }
-        }
-
+        prng = Alea(curSeed + offset);
         let art = generate(8);
-        curOffset++;
 
-        formula.innerHTML = art.toString();
         for (let y=0; y<size; y++) {
           for (let x=0; x<size; x++) {
             let u,v;
@@ -136,23 +164,66 @@
             d[idx+3] = 0xFF
           }
           if ((y % 16) == 0) {
-            display();
+            ctx.putImageData(imagedata, 0, 0);
             await delay(1);
           }
         }
-        display();
-        function display() {
-          ctx.putImageData(imagedata, 0, 0);
+        ctx.putImageData(imagedata, 0, 0);
+        const tend = performance.now();
 
-          const tend = performance.now();
-          timer.innerHTML = `Generated image <b>#${curOffset}</b> in <b>${((tend - tbeg)/1000).toFixed(3)}</b> seconds`;
+        return {
+          formula: art.toString(),
+          time: (tend - tbeg) / 1000,
         }
       }
 
-      document.getElementById("start").onclick = start;
+      async function render_main() {
+        if (isRendering) return;
+        isRendering = true;
 
-      start();
-    }, 0);
+        if (seed.value !== seedValue) {
+          seedValue = seed.value;
+
+          const seedArr = seedValue.split('+');
+          curSeed = seedArr[0];
+          curOffset = parseInt(seedArr[1])-1;
+          if (!(curOffset > 0)) {
+            curOffset = 0;
+          }
+          if (filterInt(curSeed)) {
+            curSeed = filterInt(curSeed);
+          } else if (curSeed === 'random') {
+            curSeed = +new Date() + Math.floor(Math.random()*1000);
+          } else {
+            curSeed = b_crc32(curSeed);
+          }
+          console.log(`New Seed: ${curSeed}, Offset: ${curOffset}`)
+        }
+
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+
+        let res = await render(canvas, curOffset);
+        curOffset++;
+
+        formula.innerHTML = res.formula;
+        timer.innerHTML = `Generated image <b>#${curOffset}</b> in <b>${res.time.toFixed(3)}</b> seconds`;
+
+
+        for (let i=0; i<gallery_canv.length; i++) {
+          let canv = gallery_canv[i];
+          let previewOffset = curOffset+i;
+          await render(canv, previewOffset);
+          canv.title = `image #${previewOffset+1} [${curSeed+previewOffset}]`;
+          canv.onclick = function() { curOffset = previewOffset; render_main() };
+        }
+        isRendering = false;
+      }
+
+      document.getElementById("start").onclick = render_main;
+
+      await render_main();
+    });
 
   </script>
 

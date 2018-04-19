@@ -29,7 +29,7 @@ function b_crc32 (str) {
     return (crc ^ (-1)) >>> 0;
 };
 
-let prng = Alea(b_crc32('hello'));
+let prng = Alea();
 
 class random {
 
