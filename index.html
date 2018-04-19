@@ -129,6 +129,8 @@
     const SIZE = 512;
     const GALL = DEVMODE ? 128 : 16;
 
+    const DEPTH = 9;
+
     document.addEventListener('DOMContentLoaded', async function() {
       const seed = document.getElementById("seed");
       const formula = document.getElementById("formula");
@@ -174,7 +176,7 @@
         const tbeg = performance.now();
 
         prng = Alea(curSeed + offset);
-        let art = generate(8);
+        let art = generate(DEPTH);
 
         for (let y=0; y<size; y++) {
           for (let x=0; x<size; x++) {
@@ -224,7 +226,7 @@
       }
 
       async function init() {
-        if (seed.value === seedValue) {
+        if (seed.value === seedValue && seed.value !== 'random') {
           return;
         }
 

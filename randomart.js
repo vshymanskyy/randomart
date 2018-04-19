@@ -75,7 +75,7 @@ function tent(x) {
     return (1 - (2 * Math.abs(x)));
 }
 
-class VariableX {
+class VarX {
     static get arity() { return 0 }
 
     constructor() {
@@ -88,7 +88,7 @@ class VariableX {
     }
 }
 
-class VariableY {
+class VarY {
     static get arity() { return 0 }
 
     constructor() {
@@ -101,14 +101,28 @@ class VariableY {
     }
 }
 
-class Constant {
+class BW {
+    static get arity() { return 0 }
+
+    constructor() {
+        this.c = random.uniform(-1, 1);
+    }
+    toString() {
+        return `BW(${this.c.toFixed(2)})`;
+    }
+    eval(x, y) {
+        return [this.c, this.c, this.c];
+    }
+}
+
+class RGB {
     static get arity() { return 0 }
 
     constructor() {
         this.c = [random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-1, 1)];
     }
     toString() {
-        return `Constant(${this.c[0].toFixed(2)}, ${this.c[1].toFixed(2)}, ${this.c[2].toFixed(2)})`;
+        return `RGB(${this.c[0].toFixed(2)}, ${this.c[1].toFixed(2)}, ${this.c[2].toFixed(2)})`;
     }
     eval(x, y) {
         return this.c;
@@ -117,7 +131,7 @@ class Constant {
 
 class Sum {
     static get arity() { return 2 }
-    static get mindepth() { return 0 }
+    static get mindepth() { return 2 }
 
     constructor(e1, e2) {
         this.e1 = e1;
@@ -133,7 +147,7 @@ class Sum {
 
 class Product {
     static get arity() { return 2 }
-    static get mindepth() { return 0 }
+    static get mindepth() { return 2 }
 
     constructor(e1, e2) {
         this.e1 = e1;
@@ -152,7 +166,7 @@ class Product {
 
 class Mod {
     static get arity() { return 2 }
-    static get mindepth() { return 2 }
+    static get mindepth() { return 4 }
 
     constructor(e1, e2) {
         this.e1 = e1;
@@ -174,7 +188,7 @@ class Mod {
 
 class Well {
     static get arity() { return 1 }
-    static get mindepth() { return 2 }
+    static get mindepth() { return 3 }
 
     constructor(e) {
         this.e = e;
@@ -190,7 +204,7 @@ class Well {
 
 class Tent {
     static get arity() { return 1 }
-    static get mindepth() { return 2 }
+    static get mindepth() { return 1 }
 
     constructor(e) {
         this.e = e;
@@ -232,7 +246,7 @@ class Level {
     static get mindepth() { return 0 }
 
     constructor(level, e1, e2) {
-        this.treshold = random.uniform((- 1.0), 1.0);
+        this.treshold = random.uniform(-0.8, 0.8);
         this.level = level;
         this.e1 = e1;
         this.e2 = e2;
@@ -273,7 +287,7 @@ class Mix {
     }
 }
 
-operators = [VariableX, VariableY, Constant, Sum, Product, Mod, Sin, Tent, Well, Level, Mix];
+operators = [VarX, VarY, RGB, BW, Sum, Product, Mod, Sin, Tent, Well, Level, Mix];
 operators0 = operators.filter(i => (i.arity == 0))
 operators1 = operators.filter(i => (i.arity > 0))
 
@@ -284,9 +298,10 @@ function generate(k = 50, depth = 0) {
         return new op();
     } else {
         let op = random.choice(operators1.filter(i => (depth >= i.mindepth)));
+        depth += random.randrange(1, op.arity+1);
         let args = [];
         for (let i = 0; i<op.arity; i++) {
-          args.push(generate(k, depth+i+1))
+          args.push(generate(k, depth))
         }
         return new op(...args);
     }
