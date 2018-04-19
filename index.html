@@ -222,7 +222,7 @@
         for (let i=0; i<gallery_canv.length; i++) {
           let canv = gallery_canv[i];
           let previewOffset = curOffset+i;
-          await render(canv, previewOffset);
+          render(canv, previewOffset);
           canv.title = `image #${previewOffset+1} [${curSeed+previewOffset}]`;
           canv.onclick = function() { curOffset = previewOffset; render_main() };
         }
