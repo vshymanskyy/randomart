@@ -166,7 +166,7 @@ class Product {
 
 class Mod {
     static get arity() { return 2 }
-    static get mindepth() { return 4 }
+    static get mindepth() { return 3 }
 
     constructor(e1, e2) {
         this.e1 = e1;
@@ -188,7 +188,7 @@ class Mod {
 
 class Well {
     static get arity() { return 1 }
-    static get mindepth() { return 2 }
+    static get mindepth() { return 3 }
 
     constructor(e) {
         this.e = e;
@@ -204,7 +204,7 @@ class Well {
 
 class Tent {
     static get arity() { return 1 }
-    static get mindepth() { return 2 }
+    static get mindepth() { return 3 }
 
     constructor(e) {
         this.e = e;
@@ -298,12 +298,13 @@ function generate(k = 50, depth = 0) {
         return new op();
     } else {
         let op = random.choice(operators1.filter(i => (depth >= i.mindepth)));
-
-        //while (depth < k && random.uniform() <= 0.2) depth++;
-        //depth += random.randrange(1, op.arity);
+        //while (depth < k && random.uniform() <= 0.3) depth++;
+        //depth += random.randrange(0, op.arity-1);
+        depth++;
         let args = [];
         for (let i = 0; i<op.arity; i++) {
-          args.push(generate(k, depth+i+1))
+          if (random.uniform() <= 0.5) depth++;
+          args.push(generate(k, depth))
         }
         return new op(...args);
     }
