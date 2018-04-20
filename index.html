@@ -176,6 +176,9 @@
         const tbeg = performance.now();
 
         prng = Alea(curSeed + offset);
+        palette = random.choice(palettes);
+        paletteIdx = 0;
+
         let art = generate(DEPTH);
 
         for (let y=0; y<size; y++) {
