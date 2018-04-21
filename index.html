@@ -129,7 +129,7 @@
     const SIZE = 512;
     const GALL = DEVMODE ? 128 : 32;
 
-    const DEPTH = 8;
+    const DEPTH = 6;
 
     document.addEventListener('DOMContentLoaded', async function() {
       const seed = document.getElementById("seed");
@@ -175,11 +175,7 @@
 
         const tbeg = performance.now();
 
-        prng = Alea(curSeed + offset);
-        palette = random.choice(palettes);
-        paletteIdx = 0;
-
-        let art = generate(DEPTH);
+        let art = generate(curSeed + offset, DEPTH);
 
         for (let y=0; y<size; y++) {
           for (let x=0; x<size; x++) {
@@ -258,6 +254,8 @@
       }
 
       document.getElementById("start").onclick = init;
+
+      if (DEVMODE) seed.value = 'random';
 
       await init();
     });
