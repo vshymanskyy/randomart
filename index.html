@@ -130,8 +130,6 @@
     const SIZE = 512;
     const GALL = DEVMODE ? 128 : 32;
 
-    const DEPTH = 6;
-
     document.addEventListener('DOMContentLoaded', async function() {
       const seed = document.getElementById("seed");
       const formula = document.getElementById("formula");
@@ -167,7 +165,7 @@
       gallery.appendChild(nextBtn);
 
       function getArt(offset = 0) {
-        return generate(curSeed + offset, DEPTH);
+        return generate(curSeed + offset);
       }
 
       async function render_js(canvas, art) {

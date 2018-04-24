@@ -460,11 +460,12 @@ function generateTree(k, depth) {
     return new op(...args);
 }
 
-function generate(seed, k = 50) {
+function generate(seed) {
   random = new Random(seed);
   palette = random.choice(palettes);
   paletteIdx = 0;
-  return generateTree(k, 0);
+  let maxdepth = random.randrange(5,9);
+  return generateTree(maxdepth, 0);
 }
 
 /*
