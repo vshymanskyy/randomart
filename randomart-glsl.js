@@ -72,8 +72,8 @@ const shader_frag = `
     return vec3(tent(c1.r),tent(c1.g),tent(c1.b));
   }
 
-  vec3 Sin(vec3 c1) {
-    return sin(c1);
+  vec3 Sin(float phase, float freq, vec3 c1) {
+    return sin(phase + freq * c1);
   }
 
   vec3 Level(float treshold, vec3 level, vec3 c1, vec3 c2) {

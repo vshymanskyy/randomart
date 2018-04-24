@@ -112,6 +112,7 @@
   <b>Based on:</b> Andrej Bauer's <a target="_blank" href="http://math.andrej.com/2010/04/21/random-art-in-python/">random-art</a>.
 
   <script src="randomart.js"></script>
+  <script src="randomart-glsl.js"></script> 
 
   <script>
     function delay(ms) {
@@ -165,7 +166,11 @@
       }
       gallery.appendChild(nextBtn);
 
-      async function render(canvas, offset = 0) {
+      function getArt(offset = 0) {
+        return generate(curSeed + offset, DEPTH);
+      }
+
+      async function render_js(canvas, art) {
         const size = canvas.width;
         const size2 = size/2;
 
@@ -173,18 +178,14 @@
         const imagedata = ctx.createImageData(size, size);
         const d = imagedata.data;
 
-        const tbeg = performance.now();
-
-        let art = generate(curSeed + offset, DEPTH);
+        const compute = getEvaluator(art.toString())
 
         for (let y=0; y<size; y++) {
           for (let x=0; x<size; x++) {
             let u,v;
             [u,v] = [x,y].map(i => i/size2 - 1.0);
 
-            //[u,v] = [Math.sqrt(u*u + v*v), Math.atan2(v,u)/Math.PI];
-
-            let color = art.eval(u, v);
+            let color = compute(u, v);
             color = color.map(i => (i+1.0) * 128);
 
             const idx = (y * size + x) * 4;
@@ -194,23 +195,31 @@
             d[idx+3] = 0xFF
           }
           if ((y % 16) == 0) {
-            ctx.putImageData(imagedata, 0, 0);
+            ctx.putImageData(imagedata, 0, 0, 0, 0, size, y+5);
             await delay(1);
           }
         }
         ctx.putImageData(imagedata, 0, 0);
-        const tend = performance.now();
-
-        return {
-          formula: art.toString(),
-          time: (tend - tbeg) / 1000,
-        }
       }
 
       async function render_main(offset) {
-        let res = await render(canvas, offset);
-        formula.innerHTML = res.formula;
-        timer.innerHTML = `Generated image <b>#${offset+1}</b> in <b>${res.time.toFixed(3)}</b> seconds`;
+        let art = getArt(offset);
+        formula.innerHTML = art.toString();
+
+        const tbeg = performance.now();
+        try {
+          render_glsl(canvas, art);
+          if (DEVMODE) {
+            await delay(1000);
+            await render_js(canvas, art);
+          }
+        } catch (e) {
+          await render_js(canvas, art);
+        }
+        const tend = performance.now();
+        const elapsed = (tend - tbeg) / 1000;
+
+        timer.innerHTML = `Generated image <b>#${offset+1}</b> in <b>${elapsed.toFixed(3)}</b> seconds`;
       }
 
       async function render_gallery(offset) {
@@ -220,7 +229,14 @@
           canv.title = `image #${previewOffset+1} [${curSeed+previewOffset}]`;
           canv.onclick = function() { render_main(previewOffset) };
 
-          await render(canv, previewOffset);
+          let art = getArt(previewOffset);
+
+          try {
+            render_glsl(canv, art);
+          } catch (e) {
+            await render_js(canv, art);
+          }
+          await delay(1);
         }
       }
 

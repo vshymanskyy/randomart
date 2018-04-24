@@ -95,7 +95,9 @@ function parseColor(s) {
   return [(num >> 16) & 0xFF, (num >> 8) & 0xFF, num & 0xFF ]
 }
 
-class Const {
+function fixStr(n) { return n.toFixed(4) }
+
+class CConst {
     constructor(c) {
         this.c = c;
         if (typeof(c) === 'number') {
@@ -112,35 +114,35 @@ class Const {
     }
 }
 
-class VarX {
+class CVarX {
     static get arity() { return 0 }
     static get mindepth() { return 4 }
 
     constructor() {
     }
     toString() {
-        return "x";
+        return "VarX()";
     }
     eval(x, y) {
         return [x, x, x];
     }
 }
 
-class VarY {
+class CVarY {
     static get arity() { return 0 }
     static get mindepth() { return 4 }
 
     constructor() {
     }
     toString() {
-        return "y";
+        return "VarY()";
     }
     eval(x, y) {
         return [y, y, y];
     }
 }
 
-class BW {
+class CBW {
     static get arity() { return 0 }
     static get mindepth() { return 4 }
 
@@ -148,14 +150,14 @@ class BW {
         this.c = random.uniform(-0.8, 0.8);
     }
     toString() {
-        return `BW(${this.c.toFixed(2)})`;
+        return `BW(${fixStr(this.c)})`;
     }
     eval(x, y) {
         return [this.c, this.c, this.c];
     }
 }
 
-class RandRGB {
+class CRandRGB {
     static get arity() { return 0 }
     static get mindepth() { return 4 }
 
@@ -163,14 +165,14 @@ class RandRGB {
         this.c = [random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-1, 1)];
     }
     toString() {
-        return `RGB(${this.c[0].toFixed(2)}, ${this.c[1].toFixed(2)}, ${this.c[2].toFixed(2)})`;
+        return `RGB(${fixStr(this.c[0])}, ${fixStr(this.c[1])}, ${fixStr(this.c[2])})`;
     }
     eval(x, y) {
         return this.c;
     }
 }
 
-class RGB {
+class CRGB {
     static get arity() { return 3 }
     static get mindepth() { return 4 }
 
@@ -193,7 +195,7 @@ class RGB {
 let palette = palettes[0];
 let paletteIdx = 0;
 
-class Palette {
+class CPalette {
     static get arity() { return 0 }
     static get mindepth() { return 4 }
 
@@ -204,14 +206,14 @@ class Palette {
         this.c = parseColor(this.hex).map(i => (i/128 - 1.0));
     }
     toString() {
-        return `${this.hex}`;
+        return `Const(${fixStr(this.c[0])}, ${fixStr(this.c[1])}, ${fixStr(this.c[2])})`;
     }
     eval(x, y) {
         return this.c;
     }
 }
 
-class Sum {
+class CSum {
     static get arity() { return 2 }
     static get mindepth() { return 2 }
 
@@ -227,7 +229,7 @@ class Sum {
     }
 }
 
-class Mul {
+class CMul {
     static get arity() { return 2 }
     static get mindepth() { return 2 }
 
@@ -239,14 +241,13 @@ class Mul {
         return `Mul(${this.e1}, ${this.e2})`;
     }
     eval(x, y) {
-        let b1, b2, g1, g2, r1, r2;
-        [r1, g1, b1] = this.e1.eval(x, y);
-        [r2, g2, b2] = this.e2.eval(x, y);
+        let r1, g1, b1; [r1, g1, b1] = this.e1.eval(x, y);
+        let r2, g2, b2; [r2, g2, b2] = this.e2.eval(x, y);
         return [r1 * r2, g1 * g2, b1 * b2];
     }
 }
 
-class Mod {
+class CMod {
     static get arity() { return 2 }
     static get mindepth() { return 3 }
 
@@ -258,23 +259,20 @@ class Mod {
         return `Mod(${this.e1}, ${this.e2})`;
     }
     eval(x, y) {
-        let b1, b2, g1, g2, r1, r2;
-        [r1, g1, b1] = this.e1.eval(x, y);
-        [r2, g2, b2] = this.e2.eval(x, y);
-        if (r2 == 0 || g2 == 0 || b2 == 0) {
-          return [0, 0, 0];
-        }
+        let r1, g1, b1; [r1, g1, b1] = this.e1.eval(x, y);
+        let r2, g2, b2; [r2, g2, b2] = this.e2.eval(x, y);
+        if (r2 === 0 || g2 === 0 || b2 === 0) return [0, 0, 0];
         return [r1 % r2, g1 % g2, b1 % b2];
     }
 }
 
-class ChBoard {
+class CChBoard {
     static get arity() { return 0 }
     static get mindepth() { return 5 }
 
     constructor(e1, e2) {
-        this.wX = random.uniform(0.01, 1.0);
-        this.wY = random.uniform(0.01, 1.0);
+        this.wX = random.uniform(0.1, 1.0);
+        this.wY = random.uniform(0.1, 1.0);
     }
     toString() {
         return `ChBoard()`;
@@ -288,30 +286,42 @@ class ChBoard {
     }
 }
 
-class Turbulence { // Noise
+class CTurbulence {
     static get arity() { return 1 }
-    static get mindepth() { return 3 }
+    static get mindepth() { return 2 }
 
-    constructor(e1, e2) {
-        this.e1 = e1;
-        this.e2 = e2;
+    constructor(e) {
+        this.e = e;
 
-        this.octaves = random.randrange(2, 6);
-        this.freq = random.uniform(0.1, 2);
-        this.ampl = random.uniform(0.1, 2);
+        this.octaves = random.randrange(3, 6);
+        this.freq = random.uniform(0.1, 4);
+        this.ampl = random.uniform(0.1, 5);
     }
     toString() {
-        return `Turbulence(${this.e1}, ${this.e2})`;
+        return `Turbulence(${this.e})`;
     }
     eval(x, y) {
-        let c1 = this.e1.eval(x, y);
-        let c2 = this.e2.eval(x, y);
+        let r = 0, g = 0, b = 0;
+        let amp = this.ampl;
 
-        return (isOdd) ? c1 : c2;
+        x *= this.freq;
+        y *= this.freq;
+
+        for (let i=0; i<this.octaves; i++) {
+            let r0, g0, b0;
+            [r0, g0, b0] = this.e.eval(x, y);
+            r += r0 * amp;
+            g += g0 * amp;
+            b += b0 * amp;
+            x *= 2.0;
+            y *= 2.0;
+            amp *= 0.5;
+        }
+        return [r, g, b];
     }
 }
 
-class Not {
+class CNot {
     static get arity() { return 1 }
     static get mindepth() { return 3 }
 
@@ -323,11 +333,11 @@ class Not {
     }
     eval(x, y) {
         let [r, g, b] = this.e.eval(x, y);
-        return [-1.0*r, -1.0*g, -1.0*b];
+        return [-r, -g, -b];
     }
 }
 
-class Well {
+class CWell {
     static get arity() { return 1 }
     static get mindepth() { return 3 }
 
@@ -343,7 +353,7 @@ class Well {
     }
 }
 
-class Tent {
+class CTent {
     static get arity() { return 1 }
     static get mindepth() { return 3 }
 
@@ -360,7 +370,7 @@ class Tent {
     }
 }
 
-class Sin {
+class CSin {
     static get arity() { return 1 }
     static get mindepth() { return 0 }
 
@@ -370,19 +380,17 @@ class Sin {
         this.freq = random.uniform(1.0, 6.0);
     }
     toString() {
-        return `Sin(${this.phase.toFixed(2)} + ${this.freq.toFixed(2)} * ${this.e})`;
+        return `Sin(${fixStr(this.phase)}, ${fixStr(this.freq)}, ${this.e})`;
     }
     eval(x, y) {
-        let b1, b2, g1, g2, r1, r2;
-        [r1, g1, b1] = this.e.eval(x, y);
-        r2 = Math.sin((this.phase + (this.freq * r1)));
-        g2 = Math.sin((this.phase + (this.freq * g1)));
-        b2 = Math.sin((this.phase + (this.freq * b1)));
-        return [r2, g2, b2];
+        const phase = this.phase;
+        const freq = this.freq;
+        let r,g,b; [r,g,b] = this.e.eval(x, y);
+        return [Math.sin(phase+freq*r), Math.sin(phase+freq*g), Math.sin(phase+freq*b)]
     }
 }
 
-class Level {
+class CLevel {
     static get arity() { return 3 }
     static get mindepth() { return 0 }
 
@@ -393,21 +401,21 @@ class Level {
         this.e2 = e2;
     }
     toString() {
-        return `Level(${this.treshold.toFixed(2)}, ${this.level}, ${this.e1}, ${this.e2})`;
+        return `Level(${fixStr(this.treshold)}, ${this.level}, ${this.e1}, ${this.e2})`;
     }
     eval(x, y) {
-        let b1, b2, b3, b4, g1, g2, g3, g4, r1, r2, r3, r4;
-        [r1, g1, b1] = this.level.eval(x, y);
-        [r2, g2, b2] = this.e1.eval(x, y);
-        [r3, g3, b3] = this.e2.eval(x, y);
-        r4 = ((r1 < this.treshold) ? r2 : r3);
-        g4 = ((g1 < this.treshold) ? g2 : g3);
-        b4 = ((b1 < this.treshold) ? b2 : b3);
-        return [r4, g4, b4];
+        let r1, g1, b1; [r1, g1, b1] = this.level.eval(x, y);
+        let r2, g2, b2; [r2, g2, b2] = this.e1.eval(x, y);
+        let r3, g3, b3; [r3, g3, b3] = this.e2.eval(x, y);
+        return [
+          (r1 < this.treshold) ? r2 : r3,
+          (g1 < this.treshold) ? g2 : g3,
+          (b1 < this.treshold) ? b2 : b3
+        ];
     }
 }
 
-class Mix {
+class CMix {
     static get arity() { return 3 }
     static get mindepth() { return 0 }
 
@@ -428,27 +436,28 @@ class Mix {
     }
 }
 
-const operators = [VarX, VarY, Palette, BW, RGB, Sum, Mul, Not, Mod, Sin, Tent, Well, Level, Mix];
+//TODO: Fix Mod and Mix in GLSL evaluator
+
+const operators = [CVarX, CVarY, CPalette, CBW, CRGB, CSum, CMul, CNot, /* CMod,*/ CSin, CTent, CWell, CLevel /*, CMix */];
 const operators0 = operators.filter(i => (i.arity == 0))
 const operators1 = operators.filter(i => (i.arity > 0))
 
 function generateTree(k, depth) {
     /* Randonly generate an expession of a given size. */
+    let op, args = [];
     if (depth >= k) {
-        let op = random.choice(operators0);
-        return new op();
+        op = random.choice(operators0);
     } else {
-        let op = random.choice(operators1.filter(i => (depth >= i.mindepth)));
+        op = random.choice(operators1.filter(i => (depth >= i.mindepth)));
         //while (depth < k && random.uniform() <= 0.3) depth++;
         //depth += random.randrange(0, op.arity-1);
         depth++;
-        let args = [];
         for (let i = 0; i<op.arity; i++) {
           //if (random.uniform() <= 0.2) depth++;
           args.push(generateTree(k, depth))
         }
-        return new op(...args);
     }
+    return new op(...args);
 }
 
 function generate(seed, k = 50) {
@@ -456,4 +465,57 @@ function generate(seed, k = 50) {
   palette = random.choice(palettes);
   paletteIdx = 0;
   return generateTree(k, 0);
+}
+
+/*
+ * Pure JS evaluator
+ */
+
+function BW(v) { return [v,v,v] }
+function Const(r,g,b) { return [r,g,b] }
+function RGB(c1,c2,c3) { return [brightness(...c1), brightness(...c2), brightness(...c3)] }
+
+function Sum(c1,c2) { return average(c1,c2) }
+function Mul(c1,c2) {
+  let r1, g1, b1; [r1, g1, b1] = c1;
+  let r2, g2, b2; [r2, g2, b2] = c2;
+  return [r1 * r2, g1 * g2, b1 * b2];
+}
+function Not(c1) {
+  let r1, g1, b1; [r1, g1, b1] = c1;
+  return [-r1, -g1, -b1]
+}
+function Mod(c1,c2) {
+  let r1, g1, b1; [r1, g1, b1] = c1;
+  let r2, g2, b2; [r2, g2, b2] = c2;
+
+  if (r2 === 0 || g2 === 0 || b2 === 0) return [0, 0, 0];
+  return [r1 % r2, g1 % g2, b1 % b2];
+}
+
+function Tent(c1) { let r,g,b; [r,g,b] = c1; return [tent(r), tent(g), tent(b)] }
+function Well(c1) { let r,g,b; [r,g,b] = c1; return [well(r), well(g), well(b)] }
+
+function Sin(phase,freq,c1) {
+  let r,g,b; [r,g,b] = c1;
+  return [Math.sin(phase+freq*r), Math.sin(phase+freq*g), Math.sin(phase+freq*b)]
+}
+function Level(treshold,level,c1,c2) {
+  let r1, g1, b1; [r1, g1, b1] = level;
+  let r2, g2, b2; [r2, g2, b2] = c1;
+  let r3, g3, b3; [r3, g3, b3] = c2;
+
+  return [
+    (r1 < treshold) ? r2 : r3,
+    (g1 < treshold) ? g2 : g3,
+    (b1 < treshold) ? b2 : b3
+  ];
+}
+
+function getEvaluator(formula) {
+
+  formula = formula.replace(/VarX\(\)/g, '[x,x,x]');
+  formula = formula.replace(/VarY\(\)/g, '[y,y,y]');
+
+  return new Function('x', 'y', `return ${formula}`);
 }
