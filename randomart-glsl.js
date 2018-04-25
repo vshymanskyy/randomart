@@ -194,7 +194,6 @@ function step(timestamp) {
       moveT = -moveT;
     }
     render_glsl_DRAW(drawCanvas, drawArt);
-    console.log('render' + frameT);
   }
   window.requestAnimationFrame(step);
 }
