@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <meta charset="UTF-8"> 
+
+    <style>
+      body, button {
+        box-sizing: border-box;
+        background: black;
+        color: orange;
+      }
+    </style>
+
+    <script src="randomart-glsl.js"></script> 
+
+    <script type="text/javascript">
+
+      function init() {
+        let canvas = document.getElementById("glCanvas");
+        let formula = document.getElementById("txtFormula");
+
+        formula.value = 'Sin(0.3962, 5.1739, Sin(1.7626, 4.3320, Sum(Not(Mix(frmT, posY, Const(0.9922, 0.8672, 0.6484))), Tent(Mul(posX, frmT)))))';
+
+        render_glsl(canvas, formula.value);
+        formula.onkeypress = function(e) {
+          if (e.keyCode == 13) {
+            render_glsl(canvas, formula.value);
+            return false;
+          }
+          return true;
+        };
+
+        window.requestAnimationFrame(step);
+      }
+    </script>
+  </head>
+  <body onload="init()">
+    <textarea id="txtFormula" rows="10" cols="140"></textarea>
+    <br>
+    <canvas id="glCanvas" width="768" height="768">
+  </body>
+</html>
+
