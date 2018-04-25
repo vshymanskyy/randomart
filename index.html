@@ -129,7 +129,7 @@
     const DEVMODE = 0;
 
     const SIZE = 512;
-    const GALL = DEVMODE ? 128 : 32;
+    const GALL = 32;
 
     document.addEventListener('DOMContentLoaded', async function() {
       const seed = document.getElementById("seed");
@@ -143,6 +143,7 @@
       let seedValue = '';
       let curSeed = 0;
       let curOffset = 0;
+      let mainOffset = 0;
       let isRendering = false;
 
       let prevBtn = document.createElement('div');
@@ -201,17 +202,16 @@
         ctx.putImageData(imagedata, 0, 0);
       }
 
-      async function render_main(offset) {
+      async function render_main(offset, forceJS = false) {
+        mainOffset = offset;
+
         let art = getArt(offset);
         formula.innerHTML = art.toString();
 
         const tbeg = performance.now();
         try {
+          if (forceJS) throw new Error();
           render_glsl(canvas, art);
-          if (DEVMODE) {
-            await delay(1000);
-            await render_js(canvas, art);
-          }
         } catch (e) {
           await render_js(canvas, art);
         }
@@ -264,13 +264,16 @@
         canvas.width = SIZE;
         canvas.height = SIZE;
 
+        await render_main(curOffset);
         await render_gallery(curOffset);
-        if (!DEVMODE) await render_main(curOffset);
       }
 
       document.getElementById("start").onclick = init;
 
-      if (DEVMODE) seed.value = 'random';
+      if (DEVMODE) {
+        seed.value = 'random';
+        canvas.onclick = function() { render_main(mainOffset, true) };
+      }
 
       await init();
     });
