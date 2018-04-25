@@ -7,11 +7,12 @@ const shader_vert = `
 `;
 
 const shader_frag = `
-  #ifdef GL_ES
+  #ifdef GL_FRAGMENT_PRECISION_HIGH
     precision highp float;
   #endif
 
   uniform float size;
+  uniform float frameT;
   vec2 pos;
 
   float brightness(vec3 c) {
@@ -41,6 +42,10 @@ const shader_frag = `
 
   vec3 VarY() {
     return vec3(pos.y, pos.y, pos.y);
+  }
+
+  vec3 VarT() {
+    return vec3(frameT, frameT, frameT);
   }
 
   vec3 RGB(vec3 c1, vec3 c2, vec3 c3) {
@@ -85,7 +90,7 @@ const shader_frag = `
 
   vec3 Mix(vec3 w, vec3 c1, vec3 c2) {
     float weight = 0.5 * (w.r + 1.0);
-    return mix(c1,c2,vec3(weight));
+    return mix(c2,c1,vec3(weight));
   }
 
   void main() {
@@ -105,7 +110,7 @@ const shader_frag = `
   var canvasGL = document.createElement("canvas");
   const gl = canvasGL.getContext("webgl");
 
-function render_glsl(canvas, art, oversample = 2) {
+function render_glsl_DRAW(canvas, art, oversample = 2) {
   const renderW = canvas.width * oversample;
   const renderH = canvas.height * oversample;
   const aspect = renderW / renderH;
@@ -149,11 +154,6 @@ function render_glsl(canvas, art, oversample = 2) {
     console.log(gl.getProgramInfoLog(program));
   }
 
-  //var vertices = new Float32Array([
-  //  -0.5, 0.5*aspect, 0.5, 0.5*aspect,  0.5,-0.5*aspect,
-  //  -0.5, 0.5*aspect, 0.5,-0.5*aspect, -0.5,-0.5*aspect
-  //  ]);
-
   const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
 
   const buffer = gl.createBuffer();
@@ -168,6 +168,9 @@ function render_glsl(canvas, art, oversample = 2) {
   program.size = gl.getUniformLocation(program, 'size');
   gl.uniform1f(program.size, renderW);
 
+  program.frameT = gl.getUniformLocation(program, 'frameT');
+  gl.uniform1f(program.frameT, frameT);
+
   program.position = gl.getAttribLocation(program, "position");
   gl.enableVertexAttribArray(program.position);
   gl.vertexAttribPointer(program.position, itemSize, gl.FLOAT, false, 0, 0);
@@ -179,3 +182,28 @@ function render_glsl(canvas, art, oversample = 2) {
   ctx.drawImage(gl.canvas, 0, 0, canvas.width, canvas.height);
 
 }
+
+let frameT = 0;
+let moveT = 0.01;
+let drawCanvas, drawArt;
+
+function step(timestamp) {
+  if (drawCanvas) {
+    frameT += moveT;
+    if (frameT > 1 || frameT < -1) {
+      moveT = -moveT;
+    }
+    render_glsl_DRAW(drawCanvas, drawArt);
+    console.log('render' + frameT);
+  }
+  window.requestAnimationFrame(step);
+}
+
+function render_glsl(canvas, art) {
+  frameT = 0;
+  drawCanvas = canvas;
+  drawArt = art;
+  render_glsl_DRAW(canvas, art);
+}
+
+//window.requestAnimationFrame(step);

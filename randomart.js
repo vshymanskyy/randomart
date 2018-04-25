@@ -89,6 +89,10 @@ function brightness(R,G,B) {
     return Math.sqrt(0.299*(R*R) + 0.587*(G*G) + 0.114*(B*B)) - 1.0;
 }
 
+function modulo(x,y) {
+    return x - y * Math.floor(x/y);
+}
+
 function parseColor(s) {
   if (s.startsWith('#')) s = s.substring(1);
   const num = parseInt(s, 16);
@@ -139,6 +143,20 @@ class CVarY {
     }
     eval(x, y) {
         return [y, y, y];
+    }
+}
+
+class CVarT {
+    static get arity() { return 0 }
+    static get mindepth() { return 4 }
+
+    constructor() {
+    }
+    toString() {
+        return "VarT()";
+    }
+    eval(x, y) {
+        return [t, t, t];
     }
 }
 
@@ -262,7 +280,7 @@ class CMod {
         let r1, g1, b1; [r1, g1, b1] = this.e1.eval(x, y);
         let r2, g2, b2; [r2, g2, b2] = this.e2.eval(x, y);
         if (r2 === 0 || g2 === 0 || b2 === 0) return [0, 0, 0];
-        return [r1 % r2, g1 % g2, b1 % b2];
+        return [modulo(r1,r2),modulo(g1,g2),modulo(b1,b2)];
     }
 }
 
@@ -436,9 +454,7 @@ class CMix {
     }
 }
 
-//TODO: Fix Mod and Mix in GLSL evaluator
-
-const operators = [CVarX, CVarY, CPalette, CBW, CRGB, CSum, CMul, CNot, /* CMod,*/ CSin, CTent, CWell, CLevel /*, CMix */];
+const operators = [CVarX, CVarY, CPalette, CBW, CRGB, CSum, CMul, CNot, CMod, CSin, CTent, CWell, CLevel, CMix];
 const operators0 = operators.filter(i => (i.arity == 0))
 const operators1 = operators.filter(i => (i.arity > 0))
 
@@ -464,7 +480,7 @@ function generate(seed) {
   random = new Random(seed);
   palette = random.choice(palettes);
   paletteIdx = 0;
-  let maxdepth = random.randrange(5,9);
+  let maxdepth = 6; //random.randrange(5,7);
   return generateTree(maxdepth, 0);
 }
 
@@ -491,7 +507,7 @@ function Mod(c1,c2) {
   let r2, g2, b2; [r2, g2, b2] = c2;
 
   if (r2 === 0 || g2 === 0 || b2 === 0) return [0, 0, 0];
-  return [r1 % r2, g1 % g2, b1 % b2];
+  return [modulo(r1,r2),modulo(g1,g2),modulo(b1,b2)];
 }
 
 function Tent(c1) { let r,g,b; [r,g,b] = c1; return [tent(r), tent(g), tent(b)] }
@@ -512,9 +528,12 @@ function Level(treshold,level,c1,c2) {
     (b1 < treshold) ? b2 : b3
   ];
 }
+function Mix(w,c1,c2) {
+  w = (0.5 * (w[0] + 1.0));
+  return average(c1, c2, w);
+}
 
 function getEvaluator(formula) {
-
   formula = formula.replace(/VarX\(\)/g, '[x,x,x]');
   formula = formula.replace(/VarY\(\)/g, '[y,y,y]');
 
