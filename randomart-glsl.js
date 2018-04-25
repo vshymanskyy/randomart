@@ -13,7 +13,6 @@ const shader_frag = `
 
   uniform float size;
   uniform float frameT;
-  vec2 pos;
 
   float brightness(vec3 c) {
     c += 1.0;
@@ -34,18 +33,6 @@ const shader_frag = `
 
   vec3 BW(float f) {
     return vec3(f);
-  }
-
-  vec3 VarX() {
-    return vec3(pos.x, pos.x, pos.x);
-  }
-
-  vec3 VarY() {
-    return vec3(pos.y, pos.y, pos.y);
-  }
-
-  vec3 VarT() {
-    return vec3(frameT, frameT, frameT);
   }
 
   vec3 RGB(vec3 c1, vec3 c2, vec3 c3) {
@@ -89,15 +76,17 @@ const shader_frag = `
   }
 
   vec3 Mix(vec3 w, vec3 c1, vec3 c2) {
-    float weight = 0.5 * (w.r + 1.0);
-    return mix(c2,c1,vec3(weight));
+    float weight = 0.5 * (brightness(w) + 1.0);
+    return mix(c2,c1,weight);
   }
 
   void main() {
-    pos = (gl_FragCoord.xy / size) * float(2.0) - float(1.0);
-    pos.y *= -1.0;
+    vec2 pos = (gl_FragCoord.xy / size) * float(2.0) - float(1.0);
 
-    //vec3 result = Sum(VarX(), Const(-1.0, 0.5, 1.2));
+    vec3 posX = vec3(pos.x);
+    vec3 posY = vec3(-pos.y);
+
+    vec3 frmT = vec3(frameT);
 
     vec3 result = $FORMULA;
 
