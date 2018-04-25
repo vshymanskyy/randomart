@@ -480,7 +480,7 @@ function generate(seed) {
   random = new Random(seed);
   palette = random.choice(palettes);
   paletteIdx = 0;
-  let maxdepth = 6; //random.randrange(5,7);
+  let maxdepth = random.randrange(6,8);
   return generateTree(maxdepth, 0);
 }
 
