@@ -90,7 +90,7 @@
 
   <div>
     .:[change this text to get different images]:.<br>
-    <input type="text" id="seed" value="initial seed">
+    <input type="text" id="seed" value="random">
     <button id="start">Generate</button>
     <br><br>
   </div>
@@ -271,7 +271,6 @@
       document.getElementById("start").onclick = init;
 
       if (DEVMODE) {
-        seed.value = 'random';
         canvas.onclick = function() { render_main(mainOffset, true) };
       }
 
