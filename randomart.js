@@ -178,6 +178,28 @@ class CRandom {
     }
 }
 
+let palette = palettes[0];
+let paletteIdx = 0;
+
+class CPalette {
+    static get arity() { return 0 }
+    static get mindepth() { return 3 }
+
+    constructor() {
+        this.hex = palette[paletteIdx++];
+        if (paletteIdx >= palette.length)
+          paletteIdx = 0;
+        this.c = parseColor(this.hex).map(i => (i/128 - 1.0));
+    }
+    toString() {
+        return `Const(${fixStr(this.c[0])}, ${fixStr(this.c[1])}, ${fixStr(this.c[2])})`;
+    }
+}
+
+/*
+ * Mixers
+ */
+
 class CRGB {
     static get arity() { return 3 }
     static get mindepth() { return 4 }
@@ -189,24 +211,6 @@ class CRGB {
     }
     toString() {
         return `RGB(${this.e1}, ${this.e2}, ${this.e3})`;
-    }
-}
-
-let palette = palettes[0];
-let paletteIdx = 0;
-
-class CPalette {
-    static get arity() { return 0 }
-    static get mindepth() { return 4 }
-
-    constructor() {
-        this.hex = palette[paletteIdx++];
-        if (paletteIdx >= palette.length)
-          paletteIdx = 0;
-        this.c = parseColor(this.hex).map(i => (i/128 - 1.0));
-    }
-    toString() {
-        return `Const(${fixStr(this.c[0])}, ${fixStr(this.c[1])}, ${fixStr(this.c[2])})`;
     }
 }
 
@@ -320,7 +324,7 @@ class CNot {
 
 class CWell {
     static get arity() { return 1 }
-    static get mindepth() { return 3 }
+    static get mindepth() { return 1 }
 
     constructor(e) {
         this.e = e;
@@ -332,7 +336,7 @@ class CWell {
 
 class CTent {
     static get arity() { return 1 }
-    static get mindepth() { return 3 }
+    static get mindepth() { return 1 }
 
     constructor(e) {
         this.e = e;
@@ -344,7 +348,7 @@ class CTent {
 
 class CSin {
     static get arity() { return 1 }
-    static get mindepth() { return 0 }
+    static get mindepth() { return 1 }
 
     constructor(e) {
         this.e = e;
@@ -371,6 +375,20 @@ class CLevel {
     }
 }
 
+class CClosest {
+    static get arity() { return 3 }
+    static get mindepth() { return 0 }
+
+    constructor(tgt, e1, e2) {
+        this.tgt = tgt;
+        this.e1 = e1;
+        this.e2 = e2;
+    }
+    toString() {
+        return `Closest(${this.tgt}, ${this.e1}, ${this.e2})`;
+    }
+}
+
 class CMix {
     static get arity() { return 3 }
     static get mindepth() { return 0 }
@@ -387,9 +405,10 @@ class CMix {
 
 const operators = [
     CVarX, CVarY, CVarT,
-    CPalette, CBW, CRGB, //CRandom,
-    CNot, CSum, CMul, CMod, CTent, CWell,
-    CSin, CLevel, CMix
+    CPalette, CBW, CRandom,
+    CNot, CSum, CMul, CMod, CRGB,
+    CTent, CWell, CSin, CMix,
+    CLevel, CClosest,
 ];
 const terminals = operators.filter(i => (i.arity == 0))
 const nonterminals = operators.filter(i => (i.arity > 0))
@@ -417,7 +436,7 @@ function generate(seed) {
   random = new Random(seed);
   palette = random.choice(palettes);
   paletteIdx = 0;
-  let maxdepth = random.randrange(5,7);
+  let maxdepth = random.randrange(5,8);
   return generateTree(maxdepth, 0);
 }
 
@@ -454,6 +473,11 @@ function Sin(phase,freq,c1) {
   let r,g,b; [r,g,b] = c1;
   return [Math.sin(phase+freq*r), Math.sin(phase+freq*g), Math.sin(phase+freq*b)]
 }
+function Mix(w,c1,c2) {
+  w = brightness(...w);
+  w = (0.5 * (w + 1.0));
+  return average(c1, c2, w);
+}
 function Level(treshold,level,c1,c2) {
   let r1, g1, b1; [r1, g1, b1] = level;
   let r2, g2, b2; [r2, g2, b2] = c1;
@@ -465,16 +489,21 @@ function Level(treshold,level,c1,c2) {
     (b1 < treshold) ? b2 : b3
   ];
 }
-function Mix(w,c1,c2) {
-  w = brightness(...w);
-  w = (0.5 * (w + 1.0));
-  return average(c1, c2, w);
+function Closest(tgt,c1,c2) {
+  let r1, g1, b1; [r1, g1, b1] = tgt;
+  let r2, g2, b2; [r2, g2, b2] = c1;
+  let r3, g3, b3; [r3, g3, b3] = c2;
+
+  let d1 = Math.sqrt((r2-r1)**2+(g2-g1)**2+(b2-b1)**2);
+  let d2 = Math.sqrt((r3-r1)**2+(g3-g1)**2+(b3-b1)**2);
+
+  return (d1 < d2) ? c1 : c2;
 }
 
 function getEvaluator(formula) {
   formula = formula.replace(/posX/g, '[x,x,x]');
   formula = formula.replace(/posY/g, '[y,y,y]');
-  formula = formula.replace(/frmT/g, '[0,0,0]');
+  formula = formula.replace(/frmT/g, '[1,1,1]');
 
   return new Function('x', 'y', `return ${formula}`);
 }

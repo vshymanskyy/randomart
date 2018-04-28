@@ -68,6 +68,11 @@ const shader_frag = `
     return sin(phase + freq * c1);
   }
 
+  vec3 Mix(vec3 w, vec3 c1, vec3 c2) {
+    float weight = 0.5 * (brightness(w) + 1.0);
+    return mix(c2,c1,weight);
+  }
+
   vec3 Level(float treshold, vec3 level, vec3 c1, vec3 c2) {
     float r = ((level.r < treshold) ? c1.r : c2.r);
     float g = ((level.g < treshold) ? c1.g : c2.g);
@@ -75,9 +80,10 @@ const shader_frag = `
     return vec3(r,g,b);
   }
 
-  vec3 Mix(vec3 w, vec3 c1, vec3 c2) {
-    float weight = 0.5 * (brightness(w) + 1.0);
-    return mix(c2,c1,weight);
+  vec3 Closest(vec3 tgt, vec3 c1, vec3 c2) {
+    float d1 = distance(c1, tgt);
+    float d2 = distance(c2, tgt);
+    return (d1 < d2) ? c1 : c2;
   }
 
   void main() {
@@ -172,8 +178,8 @@ function render_glsl_DRAW(canvas, art, oversample = 2) {
 
 }
 
-let frameT = 0;
-let moveT = 0.01;
+let frameT = 1;
+let moveT = -0.01;
 let drawCanvas, drawArt;
 
 function step(timestamp) {
@@ -188,7 +194,7 @@ function step(timestamp) {
 }
 
 function render_glsl(canvas, art) {
-  frameT = 0;
+  frameT = 1;
   drawCanvas = canvas;
   drawArt = art;
   render_glsl_DRAW(canvas, art);
