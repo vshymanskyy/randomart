@@ -103,10 +103,18 @@ const shader_frag = `
 `;
 
 
-  var canvasGL = document.createElement("canvas");
-  const gl = canvasGL.getContext("webgl");
+const canvasGL = document.createElement("canvas");
+const gl = canvasGL.getContext("webgl");
+let animationHandle;
 
-function render_glsl_DRAW(canvas, art, oversample = 2) {
+function render_glsl(canvas, art, animate = false, oversample = 2) {
+  const ctx2d = canvas.getContext("2d");
+
+  if (animationHandle) {
+    cancelAnimationFrame(animationHandle);
+    animationHandle = undefined;
+  }
+
   const renderW = canvas.width * oversample;
   const renderH = canvas.height * oversample;
   const aspect = renderW / renderH;
@@ -148,6 +156,7 @@ function render_glsl_DRAW(canvas, art, oversample = 2) {
 
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     console.log(gl.getProgramInfoLog(program));
+    return;
   }
 
   const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
@@ -165,40 +174,27 @@ function render_glsl_DRAW(canvas, art, oversample = 2) {
   gl.uniform1f(program.size, renderW);
 
   program.frameT = gl.getUniformLocation(program, 'frameT');
-  gl.uniform1f(program.frameT, frameT);
 
   program.position = gl.getAttribLocation(program, "position");
   gl.enableVertexAttribArray(program.position);
   gl.vertexAttribPointer(program.position, itemSize, gl.FLOAT, false, 0, 0);
 
-  gl.drawArrays(gl.TRIANGLES, 0, numItems);
+  let frameT = 0;
+  function render_frame() {
+    frameT = (frameT + 0.01) % (2*Math.PI);
+    //console.log('t:', frameT.toFixed(2));
 
-  // draw in 2d canvas
-  var ctx = canvas.getContext("2d");
-  ctx.drawImage(gl.canvas, 0, 0, canvas.width, canvas.height);
+    gl.uniform1f(program.frameT, 0.9 + 0.1 * Math.cos(frameT));
 
-}
+    gl.drawArrays(gl.TRIANGLES, 0, numItems);
+    // draw in 2d canvas
+    ctx2d.drawImage(gl.canvas, 0, 0, canvas.width, canvas.height);
 
-let frameT = 1;
-let moveT = -0.01;
-let drawCanvas, drawArt;
-
-function step(timestamp) {
-  if (drawCanvas) {
-    frameT += moveT;
-    if (frameT > 1 || frameT < -1) {
-      moveT = -moveT;
+    if (animate) {
+      animationHandle = window.requestAnimationFrame(render_frame);
     }
-    render_glsl_DRAW(drawCanvas, drawArt);
   }
-  window.requestAnimationFrame(step);
+
+  render_frame();
 }
 
-function render_glsl(canvas, art) {
-  frameT = 1;
-  drawCanvas = canvas;
-  drawArt = art;
-  render_glsl_DRAW(canvas, art);
-}
-
-//window.requestAnimationFrame(step);

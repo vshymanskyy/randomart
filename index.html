@@ -12,18 +12,15 @@
     body, button {
       box-sizing: border-box;
 
+      font-family: 'Titillium Web', sans-serif;
       background: #555;
       color: #fff;
     }
 
-    body, button, input {
+    button, input, label {
       font-family: 'Titillium Web', sans-serif;
       font-size: 18px;
-    }
-
-    input {
-      padding: 0px 7px 2px 5px;
-      border: 1px solid #fff;
+      font-weight: bold;
     }
 
     button, input {
@@ -31,7 +28,6 @@
       border-radius: 4px;
       margin: 3px;
       padding: 0px 7px 2px 5px;
-      font-weight: bold;
     }
 
     canvas {
@@ -91,9 +87,9 @@
 <body>
 
   <div>
-    .:[change this text to get different images]:.<br>
-    <input type="text" id="seed" value="random">
+    Seed: <input type="text" id="seed" value="random">
     <button id="start">Generate</button>
+    <label><input type="checkbox" id="animate" checked>Animate</label>
     <br><br>
   </div>
 
@@ -138,6 +134,7 @@
       const formula = document.getElementById("formula");
       const timer = document.getElementById("timer");
       const canvas = document.getElementById("art");
+      const animate = document.getElementById("animate");
 
       const gallery = document.getElementById("gallery");
       const gallery_canv = [];
@@ -213,7 +210,7 @@
         const tbeg = performance.now();
         try {
           if (forceJS) throw new Error();
-          render_glsl(canvas, art);
+          render_glsl(canvas, art, animate.checked);
         } catch (e) {
           await render_js(canvas, art);
         }
@@ -266,11 +263,13 @@
         canvas.width = SIZE;
         canvas.height = SIZE;
 
-        await render_main(curOffset);
         await render_gallery(curOffset);
+        await render_main(curOffset);
       }
 
       document.getElementById("start").onclick = init;
+
+      animate.onclick = function() { render_main(mainOffset) }
 
 
       // Ctrl+Click on main image to redraw using JS
