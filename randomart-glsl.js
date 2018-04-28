@@ -48,6 +48,7 @@ const shader_frag = `
   }
 
   vec3 Mod(vec3 c1, vec3 c2) {
+    if (c1 == c2) return vec3(0.0); // Produces aliasing for some reason in this case...
     if (c2.r == 0.0 || c2.g == 0.0 || c2.b == 0.0) return vec3(0.0);
     return mod(c1,c2);
   }
