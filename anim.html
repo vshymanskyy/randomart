@@ -20,6 +20,10 @@
 
         formula.value = 'Sin(0.3962, 5.1739, Sin(1.7626, 4.3320, Sum(Not(Mix(frmT, posY, Const(0.9922, 0.8672, 0.6484))), Tent(Mul(posX, frmT)))))';
 
+        //formula.value = 'Sin(0.1526, 2.3605, Sin(0.2446, 3.6360, Sum(Tent(Sum(Sum(Const(0.9531, 0.6250, 0.0703), posY), Well(frmT))), Mul(Mod(Mod(Const(0.9922, 0.2188, -0.2891), posX), Not(posX)), Well(Mod(posX, posX))))))'
+
+        //formula.value = 'Sin(0.2504, 1.7638, Mix(Mix(Level(0.3273, Mix(Not(posY), Well(posY), Well(posY)), Mod(Sin(2.7225, 3.1841, posY), Sum(posY, posX)), Sin(1.0080, 4.0918, Mul(posX, Const(0.0000, 0.3125, 0.3125)))), Sin(0.3245, 1.9311, Tent(Mix(posX, posY, BW(0.3425)))), Mix(Sin(2.3354, 1.9112, RGB(posX, frmT, posY)), Tent(Well(posX)), Well(Sin(2.8899, 2.8151, Const(-0.5441, -0.4263, -0.7413))))), Sum(Tent(RGB(RGB(Const(-0.6769, 0.9450, -0.0314), Const(0.3486, 0.4346, 0.4358), Const(0.1250, 0.2266, 0.2344)), Not(posX), Level(-0.3766, posY, frmT, posY))), Level(-0.1712, Mix(Mod(posY, Const(0.3125, 0.0938, 0.0938)), Well(Const(0.9922, -0.8984, -0.3672)), Sum(posY, Const(-0.0469, 0.0938, 0.0703))), RGB(RGB(frmT, posY, Const(0.0000, 0.3125, 0.3125)), Mod(posX, Const(0.5489, -0.5102, -0.9774)), Mod(frmT, posY)), Tent(RGB(posX, posY, Const(0.1250, 0.2266, 0.2344))))), Sin(2.2833, 4.0931, Sin(2.2698, 2.8887, Not(Mod(posX, posY))))))'
+
         render_glsl(canvas, formula.value);
         formula.onkeypress = function(e) {
           if (e.keyCode == 13) {
