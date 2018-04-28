@@ -195,7 +195,7 @@
             d[idx+3] = 0xFF
           }
           if ((y % 16) == 0) {
-            ctx.putImageData(imagedata, 0, 0, 0, 0, size, y+5);
+            ctx.putImageData(imagedata, 0, 0, 0, 0, size, y+2);
             await delay(1);
           }
         }
@@ -270,9 +270,12 @@
 
       document.getElementById("start").onclick = init;
 
-      if (DEVMODE) {
-        canvas.onclick = function() { render_main(mainOffset, true) };
-      }
+
+      // Ctrl+Click on main image to redraw using JS
+      let cntrlIsPressed;
+      document.onkeydown = function(event){ if(event.which=="17") cntrlIsPressed = true; };
+      document.onkeyup = function(){ cntrlIsPressed = false; };
+      canvas.onclick = function() { if (cntrlIsPressed) render_main(mainOffset, true) };
 
       await init();
     });
