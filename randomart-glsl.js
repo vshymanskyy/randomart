@@ -184,7 +184,7 @@ function render_glsl(canvas, art, animate = false, oversample = 2) {
     frameT = (frameT + 0.01) % (2*Math.PI);
     //console.log('t:', frameT.toFixed(2));
 
-    gl.uniform1f(program.frameT, 0.9 + 0.1 * Math.cos(frameT));
+    gl.uniform1f(program.frameT, Math.cos(frameT));
 
     gl.drawArrays(gl.TRIANGLES, 0, numItems);
     // draw in 2d canvas
