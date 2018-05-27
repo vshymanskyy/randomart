@@ -242,7 +242,7 @@ class CMul {
 
 class CMod {
     static get arity() { return 2 }
-    static get mindepth() { return 3 }
+    static get mindepth() { return 2 }
 
     constructor(e1, e2) {
         this.e1 = e1;
@@ -377,7 +377,7 @@ class CLevel {
 
 class CClosest {
     static get arity() { return 3 }
-    static get mindepth() { return 0 }
+    static get mindepth() { return 3 }
 
     constructor(tgt, e1, e2) {
         this.tgt = tgt;
@@ -436,7 +436,7 @@ function generate(seed) {
   random = new Random(seed);
   palette = random.choice(palettes);
   paletteIdx = 0;
-  let maxdepth = random.randrange(5,8);
+  let maxdepth = random.randrange(4,8);
   return generateTree(maxdepth, 0);
 }
 
