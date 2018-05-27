@@ -88,7 +88,8 @@
 
   <div>
     Seed: <input type="text" id="seed" value="random">
-    <button id="start">Go!</button><br>
+    <button id="start">Go!</button>
+    <button id="save">Save</button><br>
     <label><input type="checkbox" id="animate" checked>Animate</label>
     <br><br>
   </div>
@@ -112,6 +113,8 @@
 
   <script src="randomart.js"></script>
   <script src="randomart-glsl.js"></script> 
+  <script src="lib/WebMencoder.js"></script>
+  <script src="lib/download.js"></script>
 
   <script>
     function delay(ms) {
@@ -128,6 +131,11 @@
 
     const SIZE = 512;
     const GALL = 32;
+    
+    const capturer = new WebMencoder( {
+      framerate: 60,
+      frameLimit: 628,
+    } );
 
     document.addEventListener('DOMContentLoaded', async function() {
       const seed = document.getElementById("seed");
@@ -135,6 +143,7 @@
       const timer = document.getElementById("timer");
       const canvas = document.getElementById("art");
       const animate = document.getElementById("animate");
+      const save = document.getElementById("save");
 
       const gallery = document.getElementById("gallery");
       const gallery_canv = [];
@@ -270,6 +279,25 @@
       document.getElementById("start").onclick = init;
 
       animate.onclick = function() { render_main(mainOffset) }
+      
+      save.onclick = function() {
+        save.disabled = true;
+        let prevLabel = save.innerHTML;
+        save.innerHTML = "... rendering ..."
+        frameT = 0;
+        capturer.start();
+        capturer.on("stopped", () => {
+          capturer.save(function(blob) {
+            save.disabled = false;
+            save.innerHTML = prevLabel;
+            download( blob, `${curSeed+mainOffset}` + capturer.extension, capturer.mimeType);
+          })
+        })
+      }
+      
+      if (!WebMencoder.isSupported()) {
+        save.style.visibility = 'hidden';
+      }
 
 
       // Ctrl+Click on main image to redraw using JS

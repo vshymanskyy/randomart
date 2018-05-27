@@ -107,6 +107,8 @@ const canvasGL = document.createElement("canvas");
 const gl = canvasGL.getContext("webgl");
 let animationHandle;
 
+let frameT = 0;
+
 function render_glsl(canvas, art, animate = false, oversample = 2) {
   const ctx2d = canvas.getContext("2d");
 
@@ -179,8 +181,13 @@ function render_glsl(canvas, art, animate = false, oversample = 2) {
   gl.enableVertexAttribArray(program.position);
   gl.vertexAttribPointer(program.position, itemSize, gl.FLOAT, false, 0, 0);
 
-  let frameT = 0;
+  frameT = 0;
+
   function render_frame() {
+    if (animate) {
+      animationHandle = window.requestAnimationFrame(render_frame);
+    }
+
     frameT = (frameT + 0.01) % (2*Math.PI);
     //console.log('t:', frameT.toFixed(2));
 
@@ -190,9 +197,7 @@ function render_glsl(canvas, art, animate = false, oversample = 2) {
     // draw in 2d canvas
     ctx2d.drawImage(gl.canvas, 0, 0, canvas.width, canvas.height);
 
-    if (animate) {
-      animationHandle = window.requestAnimationFrame(render_frame);
-    }
+    capturer.addFrame( canvas );
   }
 
   render_frame();
