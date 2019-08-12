@@ -318,7 +318,7 @@ class CMix {
 const operators = [
     CVarX, CVarY, CVarT,
     CPalette, CBW, CRandom,
-    CNot, CSum, CMul, CMod, CRGB,
+    CNot, CSum, CMul, CMod, //CRGB,
     CTent, CWell, CSin, CMix,
     CLevel, CClosest,
 ];
