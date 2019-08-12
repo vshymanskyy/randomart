@@ -111,8 +111,10 @@
   <b>Source code</b> <a target="_blank" href="https://github.com/vshymanskyy/randomart">on GitHub</a>.<br>
   <b>Based on:</b> Andrej Bauer's <a target="_blank" href="http://math.andrej.com/2010/04/21/random-art-in-python/">random-art</a>.
 
+  <script src="random.js"></script>
   <script src="randomart.js"></script>
-  <script src="randomart-glsl.js"></script> 
+  <script src="randomart-eval.js"></script>
+  <script src="randomart-glsl.js"></script>
   <script src="lib/WebMencoder.js"></script>
   <script src="lib/download.js"></script>
 
@@ -178,38 +180,6 @@
         return generate(curSeed + offset);
       }
 
-      async function render_js(canvas, art) {
-        const size = canvas.width;
-        const size2 = size/2;
-
-        const ctx = canvas.getContext("2d");
-        const imagedata = ctx.createImageData(size, size);
-        const d = imagedata.data;
-
-        const compute = getEvaluator(art.toString())
-
-        for (let y=0; y<size; y++) {
-          for (let x=0; x<size; x++) {
-            let u,v;
-            [u,v] = [x,y].map(i => i/size2 - 1.0);
-
-            let color = compute(u, v);
-            color = color.map(i => (i+1.0) * 128);
-
-            const idx = (y * size + x) * 4;
-            d[idx]   = color[0]
-            d[idx+1] = color[1]
-            d[idx+2] = color[2]
-            d[idx+3] = 0xFF
-          }
-          if ((y % 16) == 0) {
-            ctx.putImageData(imagedata, 0, 0, 0, 0, size, y+2);
-            await delay(1);
-          }
-        }
-        ctx.putImageData(imagedata, 0, 0);
-      }
-
       async function render_main(offset, forceJS = false) {
         mainOffset = offset;
 
@@ -238,12 +208,12 @@
 
           let art = getArt(previewOffset);
 
-          try {
-            render_glsl(canv, art);
-          } catch (e) {
+          //try {
+          //  render_glsl(canv, art);
+          //} catch (e) {
             await render_js(canv, art);
-          }
-          await delay(1);
+          //}
+          //await delay(1);
         }
       }
 
@@ -265,7 +235,7 @@
         } else if (curSeed === 'random') {
           curSeed = +new Date() + Math.floor(Math.random()*1000);
         } else {
-          curSeed = b_crc32(curSeed);
+          curSeed = CRC32(curSeed);
         }
         console.log(`New Seed: ${curSeed}, Offset: ${curOffset}`)
 

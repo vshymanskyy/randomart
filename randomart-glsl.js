@@ -1,3 +1,7 @@
+/*
+ * GLSL evaluator
+ */
+
 const shader_vert = `
   attribute vec2 position;
 
